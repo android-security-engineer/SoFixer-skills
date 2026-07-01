@@ -2,13 +2,13 @@
 
 > 修复从内存中 dump 下来的 Android SO 文件。
 
-[![build](https://img.shields.io/github/actions/workflow/status/F8LEFT/SoFixer/build_check.yml?branch=master&label=build)](https://github.com/F8LEFT/SoFixer/actions)
-[![release](https://img.shields.io/github/v/tag/F8LEFT/SoFixer?label=release)](https://github.com/F8LEFT/SoFixer/releases)
+[![build](https://img.shields.io/github/actions/workflow/status/android-security-engineer/SoFixer-skills/build_check.yml?branch=master&label=build)](https://github.com/android-security-engineer/SoFixer-skills/actions)
+[![release](https://img.shields.io/github/v/tag/android-security-engineer/SoFixer-skills?label=release)](https://github.com/android-security-engineer/SoFixer-skills/releases)
 [![license](https://img.shields.io/badge/license-MIT-39d0d8)](LICENSE)
 
-🌐 **[官网 / 文档](https://f8left.github.io/SoFixer/)** · 一个二进制修复工具
+🌐 **[官网 / 文档](https://android-security-engineer.github.io/SoFixer-skills/)** · 一个二进制修复工具
 
-📚 **[工作原理与代码导览](docs/HOW_IT_WORKS.md)** — 想理解修复机制与代码结构，从这里开始。
+📚 **[工作原理与代码导览](https://android-security-engineer.github.io/SoFixer-skills/guide/how-it-works)** — 想理解修复机制与代码结构，从这里开始。
 
 ---
 

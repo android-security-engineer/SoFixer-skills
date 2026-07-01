@@ -1,21 +1,32 @@
-name: check build error
+name: check build
 
-on: 
+# 编译 32/64 双变体，验证跨平台构建不破。
+# SoFixer 核心用 __SO64__ 宏硬编码位宽，故一个构建目录只能产一种位宽。
+on:
   push:
+    branches: [master]
+    paths:
+      - '**.cpp'
+      - '**.h'
+      - 'CMakeLists.txt'
+      - '.github/workflows/build_check.yml'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: build32 environment create
       run: cmake -E make_directory ${{github.workspace}}/build32
@@ -23,12 +34,12 @@ jobs:
     - name: build32 Configure CMake
       shell: bash
       working-directory: ${{github.workspace}}/build32
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=OFF -G "CodeBlocks - Unix Makefiles"
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=OFF
 
     - name: build32 build
       working-directory: ${{github.workspace}}/build32
       shell: bash
-      run: cmake --build . --config $BUILD_TYPE
+      run: cmake --build . --config $BUILD_TYPE -j
 
     - name: build64 environment create
       run: cmake -E make_directory ${{github.workspace}}/build64
@@ -36,10 +47,9 @@ jobs:
     - name: build64 Configure CMake
       shell: bash
       working-directory: ${{github.workspace}}/build64
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=ON -G "CodeBlocks - Unix Makefiles"
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=ON
 
     - name: build64 build
       working-directory: ${{github.workspace}}/build64
       shell: bash
-      run: cmake --build . --config $BUILD_TYPE
-
+      run: cmake --build . --config $BUILD_TYPE -j

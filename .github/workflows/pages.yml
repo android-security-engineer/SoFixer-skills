@@ -1,36 +1,70 @@
-name: deploy docs site
+# 部署 VitePress 官网到 GitHub Pages。
+# 站点源码在 website/，构建产物在 website/.vitepress/dist/。
+# 发布地址：https://android-security-engineer.github.io/SoFixer-skills/
+name: deploy website
 
 on:
   push:
     branches: [master]
     paths:
-      - 'docs/**'
+      - 'website/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
+# 允许 GITHUB_TOKEN 部署 Pages，并获取 OIDC 写权限。
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 同一时间只跑一个部署，新构建取消进行中的旧构建。
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configure Pages
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Setup Pages
         uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: website
+        # 没有锁文件时回退到 npm install
+        continue-on-error: true
+
+      - name: Install dependencies (fallback)
+        run: npm install
+        working-directory: website
+        if: ${{ failure() }}
+
+      - name: Build with VitePress
+        run: npm run docs:build
+        working-directory: website
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs'
+          path: website/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
