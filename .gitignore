@@ -1,4 +1,34 @@
+# ===== 构建产物 =====
+# CMake 构建目录（cmake-build* / build* / build_* 等命名都覆盖）
 cmake-*
-.idea
+build*/
+build-*
+
+# CMake 生成的文件
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+
+# ===== 可执行产物 =====
+SoFixer32
+SoFixer64
+SoFixer-skills-CLI32
+SoFixer-skills-CLI64
+
+# ===== IDE / 编辑器 =====
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# ===== 项目杂项 =====
 res
 test

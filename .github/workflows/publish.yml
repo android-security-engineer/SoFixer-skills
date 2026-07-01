@@ -88,3 +88,23 @@ jobs:
         asset_path: '${{ github.workspace }}/build64/SoFixer64${{ steps.release_name_format.outputs.format }}'
         asset_name: 'SoFixer-${{ runner.os }}-64${{ steps.release_name_format.outputs.format }}'
         asset_content_type: application/octet-stream
+
+    - name: Upload skills-CLI 32
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: '${{ needs.create_release.outputs.UPLOAD_URL }}'
+        asset_path: '${{ github.workspace }}/build32/SoFixer-skills-CLI32${{ steps.release_name_format.outputs.format }}'
+        asset_name: 'SoFixer-skills-CLI-${{ runner.os }}-32${{ steps.release_name_format.outputs.format }}'
+        asset_content_type: application/octet-stream
+
+    - name: Upload skills-CLI 64
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: '${{ needs.create_release.outputs.UPLOAD_URL }}'
+        asset_path: '${{ github.workspace }}/build64/SoFixer-skills-CLI64${{ steps.release_name_format.outputs.format }}'
+        asset_name: 'SoFixer-skills-CLI-${{ runner.os }}-64${{ steps.release_name_format.outputs.format }}'
+        asset_content_type: application/octet-stream

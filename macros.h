@@ -11,6 +11,11 @@
 
 #include "elf.h"
 
+// ===== ELF 类型位宽抽象 =====
+// 用 __SO64__ 宏在编译期切换 32/64 位 ELF 类型，使同一份源代码能处理
+// 两种位宽的 SO。__SO64__ 由 CMakeLists.txt 通过 -DSO_64=ON 注入。
+// 因此一个二进制只能处理对应位宽的 SO —— SoFixer32 处理 32 位，
+// SoFixer64 处理 64 位。这也是 SoFixer-skills-CLI 需要双变体的根因。
 #ifndef __SO64__
 typedef Elf32_Ehdr Elf_Ehdr;
 typedef Elf32_Phdr Elf_Phdr;

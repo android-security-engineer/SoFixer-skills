@@ -82,6 +82,9 @@ private:
 
 
 
+// 计算所有 PT_LOAD 段覆盖的虚拟地址范围大小（页对齐）。
+// min_vaddr/max_vaddr 若非空，分别回填最小/最大虚拟地址（已页对齐）。
+// 无可加载段时返回 0。这是 ElfReader::ReserveAddressSpace 用来预留地址空间的依据。
 size_t
 phdr_table_get_load_size(const Elf_Phdr* phdr_table,
                          size_t phdr_count,
@@ -110,6 +113,10 @@ int phdr_table_get_arm_exidx(const Elf_Phdr* phdr_table,
                          Elf_Addr**      arm_exidx,
                          unsigned*         arm_exidix_count);
 
+// 在已加载的镜像中定位 PT_DYNAMIC 段，回填其内存地址、条目数与权限标志。
+// dynamic 指向内存里 dynamic 段的起始（load_bias + p_vaddr）；
+// dynamic_count = p_memsz / sizeof(Elf_Dyn)。无 PT_DYNAMIC 时 *dynamic=NULL。
+// SoFixer-skills-CLI 的 info/verify 子命令直接复用此函数读取动态段。
 void
 phdr_table_get_dynamic_section(const Elf_Phdr* phdr_table,
                                int               phdr_count,
