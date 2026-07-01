@@ -3,6 +3,8 @@
 > 这一页讲 SoFixer **怎么修**一个 dump 出来的 SO。建议先读 [前置背景知识](./background) 和 [它解决什么问题](./problem)。
 >
 > 阅读前需要对 ELF 格式有基本概念：ELF header、program header、section header、dynamic 段。下面会逐步推导，但不重复背景页的内容。
+>
+> **配套深入页**：字段含义查 [ELF 字段速查](./elf-reference) · 字段级对照看 [磁盘 vs 内存](./disk-vs-memory) · 重定位细节看 [重定位原理](./relocation)。
 
 SoFixer 的核心修复逻辑在 `ElfRebuilder::Rebuild()`，由五个阶段顺序执行，任一失败则整体失败：
 

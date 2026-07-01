@@ -66,7 +66,7 @@ ELF 里每个段有两个"位置"描述：
 | `DT_REL` / `DT_RELA` / `DT_JMPREL` | 重定位表地址 |
 | `DT_INIT_ARRAY` / `DT_FINI_ARRAY` | 构造/析构函数表 |
 
-**dynamic 段是 SoFixer 的命根子**：section header table 丢了之后，所有 section 的位置只能从 dynamic 段里这些标签"反推"出来。
+**dynamic 段是 SoFixer 的命根子**：section header table 丢了之后，所有 section 的位置只能从 dynamic 段里这些标签"反推"出来。完整的 `DT_*` 标签清单见 [ELF 字段速查](./elf-reference#dynamic-段条目elf_dyn)。
 
 ## 重定位：为什么运行时代码要被改写
 
@@ -76,6 +76,10 @@ C 代码里写 `printf("hi")`，编译时编译器不知道 `printf` 最终在�
 - **加载进内存后**：linker 算出真实绝对地址（"基地址 + 偏移"），把绝对地址**直接写回**重定位项所在的内存。
 
 所以同一份重定位表，磁盘形态是相对地址，内存形态是绝对地址。dump 内存得到的自然是绝对地址——**必须减回基地址才能还原成磁盘形态**，这正是 SoFixer `RebuildRelocs` 干的事。
+
+::: tip 想深入
+重定位还分"相对重定位"和"需要符号解析的重定位"两类，后者涉及跨 SO 调用和 PLT/GOT 机制，SoFixer 对两类处理不同。详见 [重定位原理](./relocation)。
+:::
 
 ## Android linker：加载一个 SO 时发生了什么
 

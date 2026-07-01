@@ -54,6 +54,14 @@ export default defineConfig({
             { text: '工作原理', link: '/guide/how-it-works' },
             { text: '快速开始', link: '/guide/getting-started' }
           ]
+        },
+        {
+          text: '深入原理',
+          items: [
+            { text: '磁盘 vs 内存', link: '/guide/disk-vs-memory' },
+            { text: '重定位原理', link: '/guide/relocation' },
+            { text: 'ELF 字段速查', link: '/guide/elf-reference' }
+          ]
         }
       ],
       '/cli/': [
