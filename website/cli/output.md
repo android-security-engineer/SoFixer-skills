@@ -75,6 +75,23 @@ CLI 同时用退出码表达结果，方便 shell 脚本和 AI 判断：
 
 AI 可据此一句话分流：退出码 `2` → 修正调用方式（换命令/补选项）；`1` → 换输入或排查数据；`0` → 读 `result`。
 
+```mermaid
+flowchart TD
+    Run(["运行 CLI 命令"]) --> Code{"退出码"}
+    Code -->|"0 (成功)"| Read["读 result 字段<br/>取需要的数据"]
+    Code -->|"1 (业务失败)"| Err1["看 error.code / stage<br/>load_failed? 换输入<br/>rebuild_failed? 排查数据"]
+    Code -->|"2 (参数错误)"| Err2["调 help 拿 schema<br/>补必填选项/改命令"]
+    Code -->|"3 (内部错误)"| Err3["提 issue<br/>附完整命令与输出"]
+
+    classDef ok fill:#0d1117,stroke:#56d364,color:#56d364
+    classDef warn fill:#0d1117,stroke:#d8a839,color:#d8a839
+    classDef base fill:#161b22,stroke:#39d0d8,color:#e6edf3
+    class Read ok
+    class Err1,Err2,Err3 warn
+    class Run,Code base
+```
+
+
 ## 自省：help
 
 不确定某个命令的选项时，调 `help`（或 `--help`）拿结构化 schema：

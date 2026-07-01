@@ -35,6 +35,25 @@ linker 加载时读到这条，就去 `0x1234` 那个内存位置，把当前的
 
 理解 SoFixer 行为的关键——重定位分两大类：
 
+```mermaid
+flowchart TD
+    Rel["一条重定位记录<br/>r_offset / r_info(类型+符号)"]
+    Rel --> Check{"引用本 SO<br/>还是外部符号？"}
+
+    Check -->|"本 SO（相对重定位）<br/>R_ARM_RELATIVE"| Rel2["linker：值 += 基地址<br/>dump：值 = 绝对地址"]
+    Rel2 --> SF1["SoFixer：值 -= 基地址<br/>✅ 完美还原"]
+
+    Check -->|"外部符号<br/>R_ARM_JUMP_SLOT 等"| Ext["linker：解析符号<br/>填入外部真实地址<br/>dump：值 = 别的 SO 的地址"]
+    Ext --> SF2["SoFixer：走 default 跳过<br/>⚠️ 无法还原（缺别的 SO 信息）"]
+
+    classDef ok fill:#0d1117,stroke:#56d364,color:#56d364
+    classDef warn fill:#0d1117,stroke:#d8a839,color:#d8a839
+    classDef base fill:#161b22,stroke:#39d0d8,color:#e6edf3
+    class SF1 ok
+    class SF2 warn
+    class Rel,Check,Rel2,Ext base
+```
+
 ### 1. 相对重定位（`R_ARM_RELATIVE` / `R_386_RELATIVE`）
 
 含义："这个位置里已经有一个**相对偏移**，加载时给它**加上基地址**，变成绝对地址。"
@@ -88,6 +107,35 @@ SoFixer 对这类**处理有限**——见下文"已知限制"。
 - **GOT（Global Offset Table）**：一个地址表。每项对应一个外部符号，存它的真实地址。
 
 **第一次调用**时，GOT 里还没有真实地址，PLT 会跳到 linker 的解析 stub，linker 找到 `printf`、把地址写进 GOT，再跳过去。之后调用直接走 GOT，不再解析（这叫**延迟绑定** lazy binding）。
+
+延迟绑定的两次调用对比：
+
+```mermaid
+sequenceDiagram
+    participant Code as 你的代码
+    participant PLT as PLT 跳板
+    participant GOT as GOT 表项
+    participant Linker as linker
+    participant Printf as printf (libc)
+
+    Note over GOT: 初始：GOT[n] 指向 PLT 解析 stub
+    rect rgb(22,27,34)
+        Note over Code,Printf: 第一次调用 printf（触发解析）
+        Code->>PLT: call printf
+        PLT->>GOT: jmp [GOT[n]]
+        GOT->>Linker: (指向 stub) 转交解析
+        Linker->>Linker: 在已加载 SO 中查找 printf
+        Linker->>GOT: 写入 printf 真实地址
+        Linker->>Printf: 跳过去执行
+    end
+    rect rgb(13,17,23)
+        Note over Code,Printf: 后续调用（直接走 GOT）
+        Code->>PLT: call printf
+        PLT->>GOT: jmp [GOT[n]]
+        GOT->>Printf: (已是真实地址) 直接跳
+    end
+```
+
 
 ### 为什么这和 SoFixer 有关
 

@@ -16,22 +16,44 @@ Rebuild() = RebuildPhdr()    // 阶段一：修正 program header
           && RebuildFin()    // 阶段五：拼装最终文件
 ```
 
-整体数据流：
+整体数据流（每个阶段处理什么、产出什么）：
 
-```
- dump.so（内存镜像）
-    │
-    ▼
-┌──────────────────────────────────────────────┐
-│ ① RebuildPhdr   修正 p_offset/p_filesz       │
-│ ② ReadSoInfo    遍历 dynamic 段 → soinfo     │
-│ ③ RebuildShdr   soinfo + 反推 → 新 section 表 │
-│ ④ RebuildRelocs 绝对地址 - 基地址 → 相对地址  │
-│ ⑤ RebuildFin    内容+shstrtab+section表 → 输出│
-└──────────────────────────────────────────────┘
-    │
-    ▼
- fixed.so（合法 ELF，IDA 可分析）
+```mermaid
+flowchart TD
+    IN["dump.so<br/>（内存镜像，无 section 表）"]
+    IN --> P1
+
+    subgraph P1["① RebuildPhdr"]
+        P1a["修正 p_offset = p_vaddr<br/>p_filesz = p_memsz"]
+    end
+    P1 --> P2
+
+    subgraph P2["② ReadSoInfo"]
+        P2a["遍历 dynamic 段<br/>收集 DT_STRTAB/DT_SYMTAB/DT_REL...<br/>→ 填入 soinfo"]
+    end
+    P2 --> P3
+
+    subgraph P3["③ RebuildShdr"]
+        P3a["用 soinfo 的地址反推<br/>构造各 section header<br/>排序 + 推算 sh_size<br/>追加 .shstrtab"]
+    end
+    P3 --> P4
+
+    subgraph P4["④ RebuildRelocs"]
+        P4a{"dump_base == 0?"}
+        P4a -->|是| P4b["跳过重定位修复"]
+        P4a -->|否| P4c["绝对地址 - 基地址<br/>→ 相对地址"]
+    end
+    P4 --> P5
+
+    subgraph P5["⑤ RebuildFin"]
+        P5a["内容 + .shstrtab + section 表<br/>拼成 ELF，修正 header"]
+    end
+    P5 --> OUT["fixed.so<br/>（合法 ELF，IDA 可分析）"]
+
+    classDef stage fill:#161b22,stroke:#39d0d8,color:#e6edf3
+    classDef io fill:#0d1117,stroke:#39d0d8,color:#39d0d8,font-weight:bold
+    class P1,P2,P3,P4,P5 stage
+    class IN,OUT io
 ```
 
 ## 阶段一：RebuildPhdr — 修正 program header

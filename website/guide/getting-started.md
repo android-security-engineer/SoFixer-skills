@@ -4,19 +4,18 @@
 
 ## 整体流程
 
+```mermaid
+flowchart TD
+    A["① 获取工具<br/>下载/构建 CLI"] --> B["② version 验证安装"]
+    B --> C["③ 从 IDA dump SO<br/>记下基地址 0x7db078b000"]
+    C --> D["④ fix 修复<br/>-m 传入同一基地址"]
+    D --> E["⑤ verify 校验"]
+    E --> F["⑥ IDA 打开 fixed.so 分析"]
+
+    classDef step fill:#161b22,stroke:#39d0d8,color:#e6edf3
+    class A,B,C,D,E,F step
 ```
-① 拿到工具          ② 从 IDA dump 出 SO（记下基地址）
-   SoFixer-skills-CLI        ↓
-        ↓                dump.so + 基址 0x7db078b000
-   version 验证              ↓
-                       ③ fix 修复（传入同一个基地址）
-                              ↓
-                         fixed.so
-                              ↓
-                       ④ verify 校验
-                              ↓
-                       ⑤ IDA 打开分析
-```
+
 
 ## 第一步：获取工具
 

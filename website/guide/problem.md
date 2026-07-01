@@ -26,6 +26,22 @@ SoFixer 修复**从进程内存中 dump 下来的 Android SO 文件**，让它�
                                                        IDA 打不开
 ```
 
+这三种形态的流转：
+
+```mermaid
+flowchart LR
+    A["磁盘 SO<br/>加密/变形<br/>(看不懂)"] -->|"linker 加载<br/>解密+改写"| B["内存 SO<br/>真实代码<br/>(被改坏)"]
+    B -->|"IDA dump<br/>整块内存"| C["dump.so<br/>内存镜像<br/>(非合法 ELF)"]
+    C -->|"SoFixer 修复"| D["fixed.so<br/>合法 ELF<br/>(IDA 可分析)"]
+
+    classDef bad fill:#0d1117,stroke:#d8a839,color:#d8a839
+    classDef good fill:#0d1117,stroke:#56d364,color:#56d364
+    classDef base fill:#161b22,stroke:#39d0d8,color:#e6edf3
+    class A,C bad
+    class B,D good
+```
+
+
 ## 问题：dump 出来的文件不是合法 ELF
 
 dump 拿到的文件，内容就是那块内存的原始字节。但**内存里的 SO 已经不是磁盘上的 SO 了**——Android linker 加载时改写了它，导致直接用 IDA 打开一片混乱。

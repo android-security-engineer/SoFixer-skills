@@ -1,9 +1,11 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
 // SoFixer 官网配置。
 // 设计：扁平、深色、青蓝强调色（#39d0d8），无紫色、无大圆角。
 // 自定义样式见 ./theme/ 下。
-export default defineConfig({
+// withMermaid 让 Markdown 里的 ```mermaid 代码块渲染成 SVG 图表（一图抵千言）。
+export default withMermaid(defineConfig({
   lang: 'zh-CN',
   title: 'SoFixer',
   description: '修复从内存 dump 的 Android SO 文件 · 面向 AI Agent 的结构化 CLI',
@@ -122,4 +124,4 @@ export default defineConfig({
     lightModeSwitchTitle: '切换到浅色主题',
     darkModeSwitchTitle: '切换到深色主题'
   }
-})
+}))

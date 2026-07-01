@@ -56,10 +56,23 @@ SoFixer-skills-CLI 专门为 AI agent（Claude Code、Codex 等）设计：默�
 
 ## AI 标准工作流
 
-```
-info  ──位宽不符──▶ 换变体重试
-  │
-  └─ok─▶ fix -m <基地址> ──▶ verify ──▶ 全通过则可用 IDA 打开
+```mermaid
+flowchart TD
+    Start(["拿到 dump.so"]) --> Info["info -s dump.so<br/>探测位宽/架构"]
+    Info --> Check{"error.code<br/>== class_mismatch?"}
+    Check -->|"是"| Switch["换 CLI32 ↔ CLI64"] --> Info
+    Check -->|"否 (ok=true)"| Fix["fix -s dump.so -o fixed.so -m 0x...<br/>(传 dump 基地址)"]
+    Fix --> Verify["verify -s fixed.so"]
+    Verify --> Pass{"summary.failed<br/>== 0?"}
+    Pass -->|"是"| Done(["✅ fixed.so 可用 IDA 打开"])
+    Pass -->|"否"| Debug(["⚠️ 查看失败项排查"])
+
+    classDef cmd fill:#161b22,stroke:#39d0d8,color:#e6edf3
+    classDef ok fill:#0d1117,stroke:#56d364,color:#56d364
+    classDef warn fill:#0d1117,stroke:#d8a839,color:#d8a839
+    class Info,Switch,Fix,Verify cmd
+    class Done ok
+    class Debug warn
 ```
 
 1. `info -s dump.so` — 探测位宽与架构。`class_mismatch` 就换变体。
@@ -67,3 +80,4 @@ info  ──位宽不符──▶ 换变体重试
 3. `verify -s fixed.so` — 校验，看 `summary.passed/failed`，全通过即结构有效。
 
 详见 [CLI 参考](/cli/) 与 [输出格式与错误码](/cli/output)。
+

@@ -27,6 +27,29 @@ features:
     details: help 子命令输出每个命令的选项 schema，AI 无需文档即可自省 CLI 能力并正确调用。
 ---
 
+<div class="home-overview">
+
+## SoFixer 在做什么
+
+从内存 dump 出来的 Android SO 不是合法 ELF，IDA 打不开。SoFixer 把 linker 改过的地方逆回去，重建出一个可分析的 SO。
+
+```mermaid
+flowchart LR
+    A["📱 运行中的 App<br/>SO 在内存里"] --> B["💾 IDA dump 内存<br/>得到 dump.so"]
+    B --> C["⚠️ dump.so<br/>无 section 表 / 偏移错乱<br/>重定位是绝对地址"]
+    C --> D["🔧 SoFixer 修复<br/>RebuildPhdr / Shdr / Relocs"]
+    D --> E["✅ fixed.so<br/>IDA 可分析<br/>符号/函数/交叉引用恢复"]
+
+    classDef bad fill:#0d1117,stroke:#d8a839,color:#d8a839
+    classDef good fill:#0d1117,stroke:#56d364,color:#56d364
+    classDef base fill:#161b22,stroke:#39d0d8,color:#e6edf3
+    class C bad
+    class E good
+    class A,B,D base
+```
+
+</div>
+
 <div class="ai-prompt-banner">
 
 ## ⚡ 给 AI Agent 用的接入提示词（一键复制）
@@ -79,6 +102,17 @@ features:
 </div>
 
 <style>
+.home-overview {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-left: 2px solid var(--vp-c-brand-1);
+}
+.home-overview h2 {
+  margin-top: 0;
+  border-top: none;
+}
 .ai-prompt-banner {
   margin-top: 2rem;
   padding: 1.25rem 1.5rem;

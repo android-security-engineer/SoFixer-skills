@@ -41,6 +41,38 @@ Android 应用里那些用 C/C++ 写的关键代码（比如加解密、音视�
 
 **关键**：加载器只认 segment，**不认 section**。运行时 section header table 根本不会被加载进内存——这正是 dump 出来的 SO 缺 section 的根因（见下文 [为什么 dump 的 SO 坏了](./problem)）。
 
+下图直观展示"同一块数据，两种切法"：横向是 segment（加载器视角，按权限/加载需求打包），纵向是 section（分析工具视角，按语义切分）：
+
+```mermaid
+flowchart LR
+    subgraph 文件["ELF 文件内容"]
+        direction TB
+        C1[".text 代码"] ::: :code
+        C2[".rodata 只读数据"] ::: :ro
+        C3[".data 可写数据"] ::: :rw
+        C4[".dynsym 符号表"] ::: :meta
+        C5[".dynamic"] ::: :meta
+    end
+
+    subgraph 加载器视角["Segment（加载进内存）"]
+        S1["PT_LOAD R-X<br/>= C1+C2"]
+        S2["PT_LOAD RW-<br/>= C3"]
+        S3["PT_DYNAMIC<br/>= C5"]
+    end
+
+    C1 -.-> S1
+    C2 -.-> S1
+    C3 -.-> S2
+    C5 -.-> S3
+
+    classDef code fill:#1a2332,stroke:#39d0d8,color:#e6edf3
+    classDef ro fill:#1a2332,stroke:#56d364,color:#e6edf3
+    classDef rw fill:#1a2332,stroke:#d8a839,color:#e6edf3
+    classDef meta fill:#1a2332,stroke:#8b949e,color:#e6edf3
+    class S1,S2,S3 fill:#0d1117,stroke:#39d0d8,color:#39d0d8
+```
+
+
 ### 虚拟地址 vs 文件偏移
 
 ELF 里每个段有两个"位置"描述：
@@ -94,6 +126,34 @@ Android 的动态链接器（linker）加载一个 SO 时，大致步骤：
 ::: warning 第 5 点是关键
 linker 从不碰 section header table。所以内存里**根本没有 section 信息**。你从内存 dump，自然 dump 不到 section——只能靠 dynamic 段反推。
 :::
+
+linker 加载与 SoFixer 修复的对照时序——SoFixer 做的就是把 linker 改过的地方**逆回去**：
+
+```mermaid
+sequenceDiagram
+    participant Disk as 磁盘 SO
+    participant Linker as Android linker
+    participant Mem as 进程内存
+    participant Dumper as IDA dump
+    participant SF as SoFixer
+
+    Disk->>Linker: 交付 ELF（含 section 表、相对重定位）
+    Note over Linker,Mem: ① 读 ELF header / program header
+    Linker->>Mem: ② mmap PT_LOAD 段到 load_bias 基址
+    Linker->>Mem: ③ 处理重定位：相对地址 → 绝对地址（写回内存）
+    Note over Linker,Mem: ④ 调用 DT_INIT_ARRAY
+    Note over Linker,Mem: ⑤ section header table？根本不读
+
+    Mem->>Dumper: dump 整块内存
+    Dumper->>SF: 传入 dump.so + 基地址
+    Note over SF: 逆操作开始
+    SF->>SF: RebuildPhdr：p_offset 改回 p_vaddr
+    SF->>SF: RebuildShdr：从 dynamic 反推 section 表
+    SF->>SF: RebuildRelocs：绝对地址 − 基地址 → 相对
+    SF->>SF: RebuildFin：拼成合法 ELF
+    SF->>Disk: 产出 fixed.so（结构 ≈ 磁盘形态）
+```
+
 
 ## "dump 基地址"是什么
 
