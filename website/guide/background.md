@@ -66,7 +66,7 @@ ELF 里每个段有两个"位置"描述：
 | `DT_REL` / `DT_RELA` / `DT_JMPREL` | 重定位表地址 |
 | `DT_INIT_ARRAY` / `DT_FINI_ARRAY` | 构造/析构函数表 |
 
-**dynamic 段是 SoFixer 的命根子**：section header table 丢了之后，所有 section 的位置只能从 dynamic 段里这些标签"反推"出来。完整的 `DT_*` 标签清单见 [ELF 字段速查](./elf-reference#dynamic-段条目elf_dyn)。
+**dynamic 段是 SoFixer 的命根子**：section header table 丢了之后，所有 section 的位置只能从 dynamic 段里这些标签"反推"出来。完整的 `DT_*` 标签清单见 [ELF 字段速查](./elf-reference)。
 
 ## 重定位：为什么运行时代码要被改写
 
