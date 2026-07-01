@@ -55,13 +55,21 @@ typedef Elf64_Word Elf_Word;
 #define PAGE_END(x)    PAGE_START((x) + (PAGE_SIZE-1))
 #endif
 
+// TEMP_FAILURE_RETRY：被 EINTR 中断的系统调用自动重试。
+// GNU/clang 用语句表达式 __extension__({ ... }) 实现；MSVC 不支持该扩展。
+// Windows 的 fread 不会因 EINTR 失败，故 MSVC 路径下直接退化为原表达式，
+// 仅保持可编译性，行为等价（不做重试，因为无需重试）。
 #ifndef TEMP_FAILURE_RETRY
-#define TEMP_FAILURE_RETRY(expression) \
+#  ifdef _MSC_VER
+#    define TEMP_FAILURE_RETRY(expression) (expression)
+#  else
+#    define TEMP_FAILURE_RETRY(expression) \
   (__extension__\
    ({ long int __result;\
        do __result = (long int)(expression);\
        while(__result == -1L&& errno == EINTR);\
        __result;}))
+#  endif
 #endif
 
 
