@@ -2,6 +2,7 @@ name: check build
 
 # 编译 32/64 双变体，验证跨平台构建不破。
 # SoFixer 核心用 __SO64__ 宏硬编码位宽，故一个构建目录只能产一种位宽。
+# Windows 走 MSYS2/MinGW-w64（提供 getopt.h/unistd.h 等 POSIX 头），非 MSVC。
 on:
   push:
     branches: [master]
@@ -18,38 +19,60 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  build-unix:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-
     steps:
     - uses: actions/checkout@v4
 
-    - name: build32 environment create
-      run: cmake -E make_directory ${{github.workspace}}/build32
+    - name: build32 Configure
+      working-directory: ${{github.workspace}}
+      run: cmake -E make_directory build32 && cmake -S . -B build32 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=OFF
 
-    - name: build32 Configure CMake
-      shell: bash
+    - name: build32 Build
       working-directory: ${{github.workspace}}/build32
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=OFF
-
-    - name: build32 build
-      working-directory: ${{github.workspace}}/build32
-      shell: bash
       run: cmake --build . --config $BUILD_TYPE -j
 
-    - name: build64 environment create
-      run: cmake -E make_directory ${{github.workspace}}/build64
+    - name: build64 Configure
+      working-directory: ${{github.workspace}}
+      run: cmake -E make_directory build64 && cmake -S . -B build64 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=ON
 
-    - name: build64 Configure CMake
-      shell: bash
+    - name: build64 Build
       working-directory: ${{github.workspace}}/build64
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=ON
-
-    - name: build64 build
-      working-directory: ${{github.workspace}}/build64
-      shell: bash
       run: cmake --build . --config $BUILD_TYPE -j
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MSYS2/MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: false
+        install: mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-make
+
+    - name: build32 Configure
+      env:
+        CC: gcc
+        CXX: g++
+      run: cmake -S . -B build32 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=OFF -G "MinGW Makefiles"
+
+    - name: build32 Build
+      run: cmake --build build32 --config $BUILD_TYPE -j
+
+    - name: build64 Configure
+      env:
+        CC: gcc
+        CXX: g++
+      run: cmake -S . -B build64 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSO_64=ON -G "MinGW Makefiles"
+
+    - name: build64 Build
+      run: cmake --build build64 --config $BUILD_TYPE -j
