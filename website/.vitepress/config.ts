@@ -29,6 +29,7 @@ export default defineConfig({
     nav: [
       { text: '指南', items: [
         { text: '它解决什么问题', link: '/guide/problem' },
+        { text: '前置背景知识', link: '/guide/background' },
         { text: '工作原理', link: '/guide/how-it-works' },
         { text: '快速开始', link: '/guide/getting-started' }
       ]},
@@ -49,6 +50,7 @@ export default defineConfig({
           text: '认识 SoFixer',
           items: [
             { text: '它解决什么问题', link: '/guide/problem' },
+            { text: '前置背景知识', link: '/guide/background' },
             { text: '工作原理', link: '/guide/how-it-works' },
             { text: '快速开始', link: '/guide/getting-started' }
           ]
